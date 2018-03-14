@@ -28,13 +28,17 @@ public class Playground extends JApplet implements KeyListener {
 
 	long playerOneMovable = 0;
 	long playerTwoMoveable = 0;
+	
+	long jaegerSpieler = 0;
 
 	public Playground() {
+		this.setFocusable(true);
+		this.addKeyListener(this);
 		restart();
 	}
 
 	private void restart() {
-		this.setFocusable(true);
+		
 
 		for (int x = 0; x < 32; x++) {
 			for (int y = 0; y < 32; y++) {
@@ -64,8 +68,10 @@ public class Playground extends JApplet implements KeyListener {
 		spawnPortal(2);
 
 		spawnStop();
+		
+		spawnJaeger();
 
-		this.addKeyListener(this);
+		
 		while (true) {
 			String eingabe = JOptionPane.showInputDialog(null, "Welche Punktzahl soll erreicht werden?", "Punktzahl?",
 					JOptionPane.PLAIN_MESSAGE);
@@ -209,6 +215,13 @@ public class Playground extends JApplet implements KeyListener {
 			}
 
 		}
+		if(fieldClass.equals(FeldStatus.JAEGER.getFieldClazz())) {
+			if (spieler.equals(spieler1)) {
+				jaegerSpieler = 1;
+			} else {
+				jaegerSpieler = 2;
+			}
+		}
 		if (fieldClass.equals(FeldStatus.STOP.getFieldClazz())) {
 			if (spieler.equals(spieler1)) {
 				playerTwoMoveable = System.currentTimeMillis() + 500;
@@ -216,6 +229,20 @@ public class Playground extends JApplet implements KeyListener {
 				playerOneMovable = System.currentTimeMillis() + 500;
 			}
 			spawnStop();
+		}
+		if(fieldClass.equals(FeldStatus.SPIELER.getFieldClazz())){
+			if (spieler.equals(spieler1) && jaegerSpieler == 1) {
+				spieler.coins = maxPoints;
+			} else if (spieler.equals(spieler2) && jaegerSpieler == 2) {
+				spieler.coins = maxPoints;
+			}
+		}
+		if (spieler.coins == maxPoints) {
+
+			JOptionPane.showMessageDialog(null, "Spieler " + spieler.id + " hat gewonnen!", "Gewonnen",
+					JOptionPane.INFORMATION_MESSAGE);
+			restart();
+			return false;
 		}
 		if (fieldClass.equals(FeldStatus.SPIELER.getFieldClazz())
 				|| fieldClass.equals(FeldStatus.WALL.getFieldClazz())) {
@@ -242,6 +269,16 @@ public class Playground extends JApplet implements KeyListener {
 			foFelder[x][y] = FeldStatus.COIN.getFieldObject();
 		} else {
 			spawnCoin();
+		}
+	}
+	
+	void spawnJaeger() {
+		int x = r.nextInt(32);
+		int y = r.nextInt(32);
+		if (foFelder[x][y].getClass().equals(FeldStatus.NICHTS.getFieldClazz())) {
+			foFelder[x][y] = FeldStatus.JAEGER.getFieldObject();
+		} else {
+			spawnJaeger();
 		}
 	}
 

@@ -7,7 +7,8 @@ public enum FeldStatus{
     COIN(CoinFieldObject.class),
     WALL(WallFieldObject.class),
     PORTAL(PortalFieldObject.class),
-    STOP(StopFieldObject.class);
+    STOP(StopFieldObject.class),
+    JAEGER(JaegerFieldObject.class);
 	
 	private Class<? extends AbstractFieldObject> fieldObjectClazz;
 
