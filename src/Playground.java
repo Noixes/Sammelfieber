@@ -205,16 +205,15 @@ public class Playground extends JApplet implements KeyListener {
 						JOptionPane.INFORMATION_MESSAGE);
 
 				restart();
-				// Hier wurde Gewonnen - TODO neustarten.
 				return false;
 			}
 
 		}
 		if (fieldClass.equals(FeldStatus.STOP.getFieldClazz())) {
 			if (spieler.equals(spieler1)) {
-				playerTwoMoveable = System.currentTimeMillis() + 3000;
+				playerTwoMoveable = System.currentTimeMillis() + 500;
 			} else {
-				playerOneMovable = System.currentTimeMillis() + 3000;
+				playerOneMovable = System.currentTimeMillis() + 500;
 			}
 			spawnStop();
 		}
