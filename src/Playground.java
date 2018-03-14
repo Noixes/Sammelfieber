@@ -56,7 +56,7 @@ public class Playground extends JApplet implements KeyListener {
 		spawnCoin();
 		spawnCoin();
 
-		for (int i = 0; i < 20; i++) {
+		for (int i = 0; i < 40; i++) {
 			spawnWall();
 		}
 
