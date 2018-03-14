@@ -293,8 +293,8 @@ public class Playground extends JApplet implements KeyListener {
 	}
 
 	private void spawnPortal(int num) {
-		int x = r.nextInt(32);
-		int y = r.nextInt(32);
+		int x = r.nextInt(30)+1;
+		int y = r.nextInt(30)+1;
 		if (foFelder[x][y].getClass().equals(FeldStatus.NICHTS.getFieldClazz())) {
 			foFelder[x][y] = FeldStatus.PORTAL.getFieldObject();
 			if (num == 1) {
