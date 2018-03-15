@@ -97,8 +97,8 @@ public class Playground extends JApplet implements KeyListener {
 			}
 		}
 		g.setColor(new Color(0, 0, 0));
-		g.drawString("Rot:\t" + spieler1.coins, 1000, 20);
-		g.drawString("Blau:\t" + spieler2.coins, 1000, 40);
+		g.drawString("Rot:  " + spieler1.coins, 1000, 20);
+		g.drawString("Blau: " + spieler2.coins, 1000, 40);
 	}
 
 	public void keyTyped(KeyEvent e) {
@@ -110,6 +110,8 @@ public class Playground extends JApplet implements KeyListener {
 	}
 
 	public void keyReleased(KeyEvent e) {
+
+		
 		// Spieler 1
 		if (playerOneMovable < System.currentTimeMillis()) {
 			if (e.getKeyCode() == KeyEvent.VK_W) {
