@@ -1,3 +1,4 @@
+package de.sammelfieber;
 import java.awt.*;
 
 public class Spieler

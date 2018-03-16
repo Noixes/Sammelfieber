@@ -1,3 +1,6 @@
+package de.sammelfieber;
+
+
 import java.awt.*;
 import javax.swing.*;
 
@@ -39,7 +42,7 @@ public class Playground extends JApplet implements KeyListener {
 
 	private void restart() {
 		
-
+		jaegerSpieler = 0;
 		for (int x = 0; x < 32; x++) {
 			for (int y = 0; y < 32; y++) {
 				foFelder[x][y] = FeldStatus.NICHTS.getFieldObject();
@@ -110,8 +113,6 @@ public class Playground extends JApplet implements KeyListener {
 	}
 
 	public void keyReleased(KeyEvent e) {
-
-		
 		// Spieler 1
 		if (playerOneMovable < System.currentTimeMillis()) {
 			if (e.getKeyCode() == KeyEvent.VK_W) {
@@ -156,8 +157,8 @@ public class Playground extends JApplet implements KeyListener {
 			}
 		}
 
+		// Spieler 2
 		if (playerTwoMoveable < System.currentTimeMillis()) {
-			// Spieler 2
 			if (e.getKeyCode() == KeyEvent.VK_UP) {
 				if (spieler2.y != 0) {
 					if (performStep(spieler2, spieler2.x, spieler2.y - 1)) {
@@ -223,6 +224,7 @@ public class Playground extends JApplet implements KeyListener {
 			} else {
 				jaegerSpieler = 2;
 			}
+			spawnJaeger();
 		}
 		if (fieldClass.equals(FeldStatus.STOP.getFieldClazz())) {
 			if (spieler.equals(spieler1)) {
@@ -298,13 +300,19 @@ public class Playground extends JApplet implements KeyListener {
 		int x = r.nextInt(30)+1;
 		int y = r.nextInt(30)+1;
 		if (foFelder[x][y].getClass().equals(FeldStatus.NICHTS.getFieldClazz())) {
-			foFelder[x][y] = FeldStatus.PORTAL.getFieldObject();
 			if (num == 1) {
 				portal1_x = x;
 				portal1_y = y;
+				foFelder[x][y] = FeldStatus.PORTAL.getFieldObject();
 			} else {
+				int dist = x - portal1_x + y - portal1_y;
 				portal2_x = x;
 				portal2_y = y;
+				if(dist > 20) {
+					foFelder[x][y] = FeldStatus.PORTAL.getFieldObject();
+				}else {
+					spawnPortal(num);
+				}
 			}
 		} else {
 			spawnPortal(num);

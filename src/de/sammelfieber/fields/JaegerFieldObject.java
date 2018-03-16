@@ -11,11 +11,9 @@ public class JaegerFieldObject extends AbstractFieldObject {
 
 	@Override
 	public void draw(Graphics g, int x, int y) {
-//		if(this.needRepaint) {
-            g.setColor(new Color(144, 0, 144));
-            g.fillRect((x*30)+5,(y*30)+5,20,20);
-            
-			this.needRepaint = false;
-//		}
+		g.setColor(new Color(144, 0, 144));
+		g.fillRect((x * 30) + 5, (y * 30) + 5, 20, 20);
+
+		this.needRepaint = false;
 	}
 }
