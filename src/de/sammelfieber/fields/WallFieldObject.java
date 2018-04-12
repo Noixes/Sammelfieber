@@ -11,10 +11,8 @@ public class WallFieldObject extends AbstractFieldObject {
 
 	@Override
 	public void draw(Graphics g, int x, int y) {
-		if(this.needRepaint) {
-			g.setColor(new Color(0, 0, 0));
-            g.fillRect(x*30, y*30, 30, 30);
-		}
+		g.setColor(new Color(0, 0, 0));
+		g.fillRect(x * 30, y * 30, 30, 30);
 	}
 
 }

@@ -12,15 +12,18 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.Random;
 
-public class Playground extends JApplet implements KeyListener {
+public class Playground extends JApplet implements KeyListener, Runnable {
 
+	private int globalCoins;
+	private boolean showed = false;
+	
 	private static final Color BLUE = new Color(0, 0, 255);
 	private static final Color RED = new Color(255, 0, 0);
 	private static final long serialVersionUID = -3997705229534458132L;
 	Spieler spieler1, spieler2;
 	Random r;
 	public AbstractFieldObject[][] foFelder = new AbstractFieldObject[32][32];
-	int maxPoints;
+	int maxPoints = 10;
 
 	// Fürs erste:
 	private int portal1_x;
@@ -33,15 +36,18 @@ public class Playground extends JApplet implements KeyListener {
 	long playerTwoMoveable = 0;
 	
 	long jaegerSpieler = 0;
+	private long gameStartTime;
 
 	public Playground() {
 		this.setFocusable(true);
 		this.addKeyListener(this);
+		this.setMinimumSize(new Dimension(1280, 970));
 		restart();
+		Thread t = new Thread(this);
+		t.start();
 	}
 
 	private void restart() {
-		
 		jaegerSpieler = 0;
 		for (int x = 0; x < 32; x++) {
 			for (int y = 0; y < 32; y++) {
@@ -49,7 +55,8 @@ public class Playground extends JApplet implements KeyListener {
 			}
 		}
 
-		r = new Random(System.currentTimeMillis());
+		gameStartTime = System.currentTimeMillis();
+		r = new Random(gameStartTime);
 		PlayerFieldObject playerOne = (PlayerFieldObject) FeldStatus.SPIELER.getFieldObject();
 		playerOne.setColor(RED);
 		foFelder[0][0] = playerOne;
@@ -74,23 +81,15 @@ public class Playground extends JApplet implements KeyListener {
 		
 		spawnJaeger();
 
-		
-		while (true) {
-			String eingabe = JOptionPane.showInputDialog(null, "Welche Punktzahl soll erreicht werden?", "Punktzahl?",
-					JOptionPane.PLAIN_MESSAGE);
-			try {
-				maxPoints = Integer.parseInt(eingabe);
-				return;
-			} catch (Exception e) {
-				System.exit(0);
-			}
-		}
+	}
+	
+	@Override
+	public void update(Graphics g) {
+		paint(g);
 	}
 
 	public void paint(Graphics g) {
-		this.setSize(new Dimension(1280, 970));
-		g.setColor(new Color(255, 255, 255));
-		g.fillRect(0, 0, 1280, 960);
+		this.setSize(new Dimension(1280, 980));
 		for (int x = 0; x < 32; x++) {
 			for (int y = 0; y < 32; y++) {
 				if ((x == portal1_x && y == portal1_y) || (x == portal2_x && y == portal2_y)) {
@@ -99,9 +98,16 @@ public class Playground extends JApplet implements KeyListener {
 				foFelder[x][y].draw(g, x, y);
 			}
 		}
+		g.setColor(Color.WHITE);
+		g.fillRect(1000, 0, 200, 500);
 		g.setColor(new Color(0, 0, 0));
-		g.drawString("Rot:  " + spieler1.coins, 1000, 20);
-		g.drawString("Blau: " + spieler2.coins, 1000, 40);
+		g.drawString("Zeit: " + (System.currentTimeMillis() - gameStartTime) / 1000, 1000, 20);
+		
+		g.drawString("Rot:", 1000, 40);
+		g.drawString(spieler1.coins + " von " + maxPoints, 1040, 40);
+		
+		g.drawString("Blau: ", 1000, 60);
+		g.drawString(spieler2.coins + " von " + maxPoints, 1040, 60);
 	}
 
 	public void keyTyped(KeyEvent e) {
@@ -200,13 +206,15 @@ public class Playground extends JApplet implements KeyListener {
 				}
 			}
 		}
-		repaint();
+		//repaint();
 	}
 
 	boolean performStep(Spieler spieler, int x, int y) {
 		Class<? extends AbstractFieldObject> fieldClass = foFelder[x][y].getClass();
 		if (fieldClass.equals(FeldStatus.COIN.getFieldClazz())) {
 			spieler.coins++;
+			globalCoins++;
+			showed = false;
 			spawnCoin();
 			if (spieler.coins == maxPoints) {
 
@@ -217,6 +225,21 @@ public class Playground extends JApplet implements KeyListener {
 				return false;
 			}
 
+		}
+		if(globalCoins == 15 && !showed) {
+			showed = true;
+			JOptionPane.showMessageDialog(null, "Sammelfan! - Sammle 15 Coins", "Achievement!",
+					JOptionPane.INFORMATION_MESSAGE);
+		}
+		if(globalCoins == 50 && !showed) {
+			showed = true;
+			JOptionPane.showMessageDialog(null, "Sammelirre! - Sammle 50 Coins", "Achievement!",
+					JOptionPane.INFORMATION_MESSAGE);
+		}
+		if(globalCoins == 100 && !showed) {
+			showed = true;
+			JOptionPane.showMessageDialog(null, "Sammelfieber! - Sammle 100 Coins", "Achievement!",
+					JOptionPane.INFORMATION_MESSAGE);
 		}
 		if(fieldClass.equals(FeldStatus.JAEGER.getFieldClazz())) {
 			if (spieler.equals(spieler1)) {
@@ -308,7 +331,7 @@ public class Playground extends JApplet implements KeyListener {
 				int dist = x - portal1_x + y - portal1_y;
 				portal2_x = x;
 				portal2_y = y;
-				if(dist > 20) {
+				if(dist > 10) {
 					foFelder[x][y] = FeldStatus.PORTAL.getFieldObject();
 				}else {
 					spawnPortal(num);
@@ -326,6 +349,18 @@ public class Playground extends JApplet implements KeyListener {
 			foFelder[x][y] = FeldStatus.WALL.getFieldObject();
 		} else {
 			spawnWall();
+		}
+	}
+
+	@Override
+	public void run() {
+		while(true) {
+			try {
+				Thread.sleep(1000/20);
+				this.repaint();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }

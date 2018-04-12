@@ -11,11 +11,9 @@ public class NothingFieldObject extends AbstractFieldObject {
 
 	@Override
 	public void draw(Graphics g, int x, int y) {
-		if(this.needRepaint) {
-			g.setColor(new Color(0,0,0));
-            g.drawRect((x*30),(y*30),30,30);
-			this.needRepaint = false;
-		}
+		g.setColor(new Color(255, 255, 255));
+		g.fillRect((x * 30), (y * 30), 30, 30);
+		this.needRepaint = false;
 	}
 
 }
