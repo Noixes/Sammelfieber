@@ -15,6 +15,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JApplet;
 import javax.swing.JOptionPane;
@@ -54,8 +55,20 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 		this.setMinimumSize(new Dimension(1280, 970));
 		readArchivements();
 		restart();
+
 		Thread t = new Thread(this);
 		t.start();
+		new Thread(() -> {
+			while (true) {
+
+				handleKeys();
+				try {
+					Thread.sleep(75);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}).start();
 	}
 
 	private void readArchivements() {
@@ -106,6 +119,9 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 	}
 
 	private void restart() {
+		for (int i = 0; i < keys.length; i++) {
+			keys[i] = new AtomicBoolean(false);
+		}
 		if (gameStartTime != 0) {
 			archivements.gameTimes.add(Float.valueOf((System.currentTimeMillis() - gameStartTime) / 1000));
 			writeArchivement();
@@ -175,18 +191,18 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 		g.drawString(spieler2.coins + " von " + maxPoints, 1040, 60);
 	}
 
-	public void keyTyped(KeyEvent e) {
+	AtomicBoolean[] keys = new AtomicBoolean[255];
 
+	public void keyTyped(KeyEvent e) {
 	}
 
 	public void keyPressed(KeyEvent e) {
-
+		keys[e.getKeyCode()].set(true);
 	}
 
-	public void keyReleased(KeyEvent e) {
-		// Spieler 1
+	private void handleKeys() {
 		if (playerOneMovable < System.currentTimeMillis()) {
-			if (e.getKeyCode() == KeyEvent.VK_W) {
+			if (keys[KeyEvent.VK_W].get()) {
 				if (spieler1.y != 0) {
 					if (performStep(spieler1, spieler1.x, spieler1.y - 1)) {
 						foFelder[spieler1.x][spieler1.y] = FeldStatus.NICHTS.getFieldObject();
@@ -198,7 +214,7 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 					}
 				}
 			}
-			if (e.getKeyCode() == KeyEvent.VK_A) {
+			if (keys[KeyEvent.VK_A].get()) {
 				if (spieler1.x != 0) {
 					if (performStep(spieler1, spieler1.x - 1, spieler1.y)) {
 						foFelder[spieler1.x][spieler1.y] = FeldStatus.NICHTS.getFieldObject();
@@ -209,7 +225,7 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 					}
 				}
 			}
-			if (e.getKeyCode() == KeyEvent.VK_S) {
+			if (keys[KeyEvent.VK_S].get()) {
 				if (spieler1.y != 31) {
 					if (performStep(spieler1, spieler1.x, spieler1.y + 1)) {
 						foFelder[spieler1.x][spieler1.y] = FeldStatus.NICHTS.getFieldObject();
@@ -220,7 +236,7 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 					}
 				}
 			}
-			if (e.getKeyCode() == KeyEvent.VK_D) {
+			if (keys[KeyEvent.VK_D].get()) {
 				if (spieler1.x != 31) {
 					if (performStep(spieler1, spieler1.x + 1, spieler1.y)) {
 						foFelder[spieler1.x][spieler1.y] = FeldStatus.NICHTS.getFieldObject();
@@ -232,10 +248,9 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 				}
 			}
 		}
-
 		// Spieler 2
 		if (playerTwoMoveable < System.currentTimeMillis()) {
-			if (e.getKeyCode() == KeyEvent.VK_UP) {
+			if (keys[KeyEvent.VK_UP].get()) {
 				if (spieler2.y != 0) {
 					if (performStep(spieler2, spieler2.x, spieler2.y - 1)) {
 						foFelder[spieler2.x][spieler2.y] = FeldStatus.NICHTS.getFieldObject();
@@ -246,7 +261,7 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 					}
 				}
 			}
-			if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+			if (keys[KeyEvent.VK_LEFT].get()) {
 				if (spieler2.x != 0) {
 					if (performStep(spieler2, spieler2.x - 1, spieler2.y)) {
 						foFelder[spieler2.x][spieler2.y] = FeldStatus.NICHTS.getFieldObject();
@@ -257,7 +272,7 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 					}
 				}
 			}
-			if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+			if (keys[KeyEvent.VK_DOWN].get()) {
 				if (spieler2.y != 31) {
 					if (performStep(spieler2, spieler2.x, spieler2.y + 1)) {
 						foFelder[spieler2.x][spieler2.y] = FeldStatus.NICHTS.getFieldObject();
@@ -268,7 +283,7 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 					}
 				}
 			}
-			if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+			if (keys[KeyEvent.VK_RIGHT].get()) {
 				if (spieler2.x != 31) {
 					if (performStep(spieler2, spieler2.x + 1, spieler2.y)) {
 						foFelder[spieler2.x][spieler2.y] = FeldStatus.NICHTS.getFieldObject();
@@ -280,6 +295,10 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 				}
 			}
 		}
+	}
+
+	public void keyReleased(KeyEvent e) {
+		keys[e.getKeyCode()].set(false);
 		if (e.getKeyCode() == KeyEvent.VK_Z) {
 			JOptionPane.showMessageDialog(null, getGameStats(), "Gamestats", JOptionPane.INFORMATION_MESSAGE);
 		}
