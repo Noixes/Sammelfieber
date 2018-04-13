@@ -1,22 +1,32 @@
 package de.sammelfieber;
 
-
-import java.awt.*;
-import javax.swing.*;
-
-import de.sammelfieber.fields.FeldStatus;
-import de.sammelfieber.fields.PlayerFieldObject;
-import de.sammelfieber.fields.AbstractFieldObject;
-
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.util.Random;
+
+import javax.swing.JApplet;
+import javax.swing.JOptionPane;
+
+import de.sammelfieber.fields.AbstractFieldObject;
+import de.sammelfieber.fields.FeldStatus;
+import de.sammelfieber.fields.PlayerFieldObject;
 
 public class Playground extends JApplet implements KeyListener, Runnable {
 
-	private int globalCoins;
+	private Archivements archivements;
 	private boolean showed = false;
-	
+	private boolean showedP = false;
+
 	private static final Color BLUE = new Color(0, 0, 255);
 	private static final Color RED = new Color(255, 0, 0);
 	private static final long serialVersionUID = -3997705229534458132L;
@@ -34,7 +44,7 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 
 	long playerOneMovable = 0;
 	long playerTwoMoveable = 0;
-	
+
 	long jaegerSpieler = 0;
 	private long gameStartTime;
 
@@ -42,9 +52,28 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 		this.setFocusable(true);
 		this.addKeyListener(this);
 		this.setMinimumSize(new Dimension(1280, 970));
+		readArchivements();
 		restart();
 		Thread t = new Thread(this);
 		t.start();
+	}
+
+	private void readArchivements() {
+		InputStream fis = null;
+
+		try {
+			fis = new FileInputStream("archive.ments");
+			ObjectInputStream o = new ObjectInputStream(fis);
+			archivements = (Archivements) o.readObject();
+		} catch (IOException e) {
+			archivements = new Archivements();
+		} catch (ClassNotFoundException e) {
+		} finally {
+			try {
+				fis.close();
+			} catch (Exception e) {
+			}
+		}
 	}
 
 	private void restart() {
@@ -78,11 +107,11 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 		spawnPortal(2);
 
 		spawnStop();
-		
+
 		spawnJaeger();
 
 	}
-	
+
 	@Override
 	public void update(Graphics g) {
 		paint(g);
@@ -99,13 +128,13 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 			}
 		}
 		g.setColor(Color.WHITE);
-		g.fillRect(1000, 0, 200, 500);
+		g.fillRect(1000, 0, 200, 100);
 		g.setColor(new Color(0, 0, 0));
 		g.drawString("Zeit: " + (System.currentTimeMillis() - gameStartTime) / 1000, 1000, 20);
-		
+
 		g.drawString("Rot:", 1000, 40);
 		g.drawString(spieler1.coins + " von " + maxPoints, 1040, 40);
-		
+
 		g.drawString("Blau: ", 1000, 60);
 		g.drawString(spieler2.coins + " von " + maxPoints, 1040, 60);
 	}
@@ -206,14 +235,15 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 				}
 			}
 		}
-		//repaint();
+		// repaint();
 	}
 
 	boolean performStep(Spieler spieler, int x, int y) {
 		Class<? extends AbstractFieldObject> fieldClass = foFelder[x][y].getClass();
 		if (fieldClass.equals(FeldStatus.COIN.getFieldClazz())) {
 			spieler.coins++;
-			globalCoins++;
+			archivements.globalCoins++;
+			writeArchivement();
 			showed = false;
 			spawnCoin();
 			if (spieler.coins == maxPoints) {
@@ -226,28 +256,33 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 			}
 
 		}
-		if(globalCoins == 15 && !showed) {
+		if (archivements.globalCoins == 15 && !showed) {
 			showed = true;
 			JOptionPane.showMessageDialog(null, "Sammelfan! - Sammle 15 Coins", "Achievement!",
 					JOptionPane.INFORMATION_MESSAGE);
 		}
-		if(globalCoins == 50 && !showed) {
+		if (archivements.globalCoins == 50 && !showed) {
 			showed = true;
 			JOptionPane.showMessageDialog(null, "Sammelirre! - Sammle 50 Coins", "Achievement!",
 					JOptionPane.INFORMATION_MESSAGE);
 		}
-		if(globalCoins == 100 && !showed) {
+		if (archivements.globalCoins == 100 && !showed) {
 			showed = true;
 			JOptionPane.showMessageDialog(null, "Sammelfieber! - Sammle 100 Coins", "Achievement!",
 					JOptionPane.INFORMATION_MESSAGE);
 		}
-		if(fieldClass.equals(FeldStatus.JAEGER.getFieldClazz())) {
+		if (archivements.portalEntered == 5 && !showedP) {
+			showedP = true;
+			JOptionPane.showMessageDialog(null, "Now you're thinking with portals!", "Achievement!",
+					JOptionPane.INFORMATION_MESSAGE);
+		}
+		if (fieldClass.equals(FeldStatus.JAEGER.getFieldClazz())) {
 			if (spieler.equals(spieler1)) {
 				jaegerSpieler = 1;
 			} else {
 				jaegerSpieler = 2;
 			}
-			spawnJaeger();
+			// spawnJaeger();
 		}
 		if (fieldClass.equals(FeldStatus.STOP.getFieldClazz())) {
 			if (spieler.equals(spieler1)) {
@@ -257,7 +292,7 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 			}
 			spawnStop();
 		}
-		if(fieldClass.equals(FeldStatus.SPIELER.getFieldClazz())){
+		if (fieldClass.equals(FeldStatus.SPIELER.getFieldClazz())) {
 			if (spieler.equals(spieler1) && jaegerSpieler == 1) {
 				spieler.coins = maxPoints;
 			} else if (spieler.equals(spieler2) && jaegerSpieler == 2) {
@@ -276,6 +311,9 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 			return false;
 		}
 		if (fieldClass.equals(FeldStatus.PORTAL.getFieldClazz())) {
+			archivements.portalEntered++;
+			writeArchivement();
+			showedP = false;
 			foFelder[spieler.x][spieler.y] = FeldStatus.NICHTS.getFieldObject();
 			if (x == portal1_x && y == portal1_y) {
 				spieler.x = portal2_x;
@@ -289,6 +327,26 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 		return true;
 	}
 
+	private void writeArchivement() {
+		OutputStream fos = null;
+
+		try {
+			fos = new FileOutputStream("archive.ments", false);
+			ObjectOutputStream o = new ObjectOutputStream(fos);
+			o.writeObject(archivements);
+			o.flush();
+			o.close();
+		} catch (IOException e) {
+			System.err.println(e);
+		} finally {
+			try {
+				fos.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 	void spawnCoin() {
 		int x = r.nextInt(32);
 		int y = r.nextInt(32);
@@ -298,7 +356,7 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 			spawnCoin();
 		}
 	}
-	
+
 	void spawnJaeger() {
 		int x = r.nextInt(32);
 		int y = r.nextInt(32);
@@ -320,8 +378,8 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 	}
 
 	private void spawnPortal(int num) {
-		int x = r.nextInt(30)+1;
-		int y = r.nextInt(30)+1;
+		int x = r.nextInt(30) + 1;
+		int y = r.nextInt(30) + 1;
 		if (foFelder[x][y].getClass().equals(FeldStatus.NICHTS.getFieldClazz())) {
 			if (num == 1) {
 				portal1_x = x;
@@ -331,9 +389,9 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 				int dist = x - portal1_x + y - portal1_y;
 				portal2_x = x;
 				portal2_y = y;
-				if(dist > 10) {
+				if (dist > 10) {
 					foFelder[x][y] = FeldStatus.PORTAL.getFieldObject();
-				}else {
+				} else {
 					spawnPortal(num);
 				}
 			}
@@ -354,12 +412,11 @@ public class Playground extends JApplet implements KeyListener, Runnable {
 
 	@Override
 	public void run() {
-		while(true) {
+		while (true) {
 			try {
-				Thread.sleep(1000/20);
+				Thread.sleep(1000 / 15);
 				this.repaint();
 			} catch (InterruptedException e) {
-				e.printStackTrace();
 			}
 		}
 	}
